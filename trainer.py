@@ -7,6 +7,8 @@ from typing import Dict, List
 from zoneinfo import ZoneInfo
 
 from osaka_forecast_engine import forecast_to_json, synthesize_osaka_forecast
+from predict_real_weather import fetch_real_weather
+from requests import RequestException
 
 MODEL_PATH = Path("data/model_param.json")
 FORECAST_PATH = Path("data/forecast.json")
@@ -51,9 +53,6 @@ def mape_style_error(forecast_values: List[float], actual_values: List[float]) -
 def ensure_forecast_alignment(real_data: dict) -> dict:
     """Guarantee that forecast.json exists and overlaps with the provided real data."""
 
-    if not REAL_WEATHER_PATH.exists():
-        raise FileNotFoundError("real_weather.json must exist for training")
-
     if not FORECAST_PATH.exists():
         entries = real_data.get("entries", [])
         if not entries:
@@ -69,7 +68,24 @@ def ensure_forecast_alignment(real_data: dict) -> dict:
 
 def main() -> None:
     if not REAL_WEATHER_PATH.exists():
-        raise FileNotFoundError("real_weather.json must exist for training")
+        REAL_WEATHER_PATH.parent.mkdir(parents=True, exist_ok=True)
+        print("[INFO] real_weather.json missing; fetching latest observations...")
+        try:
+            save_json(REAL_WEATHER_PATH, fetch_real_weather())
+        except RequestException as exc:
+            print(f"[WARN] Failed to fetch real weather ({exc}); generating synthetic observations for training fallback.")
+            tz = ZoneInfo("Asia/Tokyo")
+            start_dt = datetime.datetime.now(tz).replace(minute=0, second=0, microsecond=0)
+            synthetic_entries = synthesize_osaka_forecast(start_dt, hours=24)
+            synthetic_real = {
+                "source": "synthetic-fallback",
+                "latitude": 34.6937,
+                "longitude": 135.5023,
+                "timezone": "Asia/Tokyo",
+                "retrieved_at": start_dt.isoformat(),
+                "entries": synthetic_entries,
+            }
+            save_json(REAL_WEATHER_PATH, synthetic_real)
 
     real_data = load_json(REAL_WEATHER_PATH)
     forecast_data = ensure_forecast_alignment(real_data)
