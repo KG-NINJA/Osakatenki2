@@ -2,9 +2,9 @@ name: Self-Learning Osaka Weather AI
 
 on:
   schedule:
-    - cron: "0 0 * * *"     # JST 9:00 - fetch real weather
-    - cron: "0 3 * * *"     # JST 12:00 - generate forecast + HTML
-    - cron: "0 0 * * *"     # JST next day 9:00 - train model
+    - cron: "0 0 * * *"   # JST 9:00 real weather
+    - cron: "0 3 * * *"   # JST 12:00 forecast
+    - cron: "2 0 * * *"   # JST 9:02 train (1日1回だけ)
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python predict_real_weather.py
       - uses: stefanzweifel/git-auto-commit-action@v5
@@ -33,7 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python run_forecast.py
       - uses: actions/upload-pages-artifact@v3
@@ -56,7 +58,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python trainer.py
       - uses: stefanzweifel/git-auto-commit-action@v5
