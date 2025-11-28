@@ -38,6 +38,29 @@ def load_json(path, default):
 
 
 # -----------------------------
+# 修正: prediction.json の形式変換
+# -----------------------------
+def load_prediction(path=DATA_MODEL):
+    if not os.path.exists(path):
+        raise FileNotFoundError("Prediction file not found")
+
+    with open(path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    # open-meteoの場合 entries[] 構造を flatten する
+    if "entries" in raw:
+        pred = {
+            "time": [e["time"] for e in raw["entries"]],
+            "temp": [e["temperature"] for e in raw["entries"]],
+            "rain": [e["precipitation_probability"] for e in raw["entries"]],
+        }
+        return pred
+
+    # 既に整形済み
+    return raw
+
+
+# -----------------------------
 # 1. 今日の予報を生成
 # -----------------------------
 def generate_forecast():
@@ -46,16 +69,15 @@ def generate_forecast():
     forecast = synthesize_osaka_forecast(start, hours=24)
 
     data = forecast_to_json(forecast)
-    write_json(DATA_MODEL, data)
-    return forecast, data
+    write_json(DATA_MODEL, data)  # そのまま保存
+    return forecast, load_prediction(DATA_MODEL)  # 再読み込みして構造統一
 
 
 # -----------------------------
 # 2. 実測データの読み込み
 # -----------------------------
 def load_real_weather():
-    real = load_json(DATA_REAL, default=None)
-    return real
+    return load_json(DATA_REAL, default=None)
 
 
 # -----------------------------
@@ -68,21 +90,19 @@ def compute_error(real, forecast_json):
     real_temp = np.array(real["temp"])
     pred_temp = np.array(forecast_json["temp"])
 
-    # 誤差が並ぶように長さを合わせる
     L = min(len(real_temp), len(pred_temp))
     real_temp = real_temp[:L]
     pred_temp = pred_temp[:L]
 
     mae = float(np.mean(np.abs(real_temp - pred_temp)))
     mape = float(np.mean(np.abs(real_temp - pred_temp) / np.maximum(real_temp, 1)) * 100)
-
     errors = list(np.abs(real_temp - pred_temp))
 
     return mae, mape, errors
 
 
 # -----------------------------
-# 4. 誤差履歴を保存（成長可視化用）
+# 4. 誤差履歴保存
 # -----------------------------
 def update_error_history(mape):
     history = load_json(DATA_ERROR_LOG, default=[])
@@ -96,7 +116,7 @@ def update_error_history(mape):
 
 
 # -----------------------------
-# 5. 成長曲線グラフの生成
+# 5. 成長グラフ
 # -----------------------------
 def plot_growth(history):
     if len(history) <= 1:
@@ -120,7 +140,7 @@ def plot_growth(history):
 
 
 # -----------------------------
-# 6. HTML 結果ページの作成
+# 6. HTML生成
 # -----------------------------
 def render_full_page(html_forecast, real, pred_json, mae, mape, errors, growth_path):
     real_table = ""
@@ -205,7 +225,6 @@ def main():
     )
 
     render_full_page(html, real, pred_json, mae, mape, errors, growth_path)
-
     print("Done.")
 
 
