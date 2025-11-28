@@ -1,55 +1,56 @@
+# predict_real_weather.py
+# 実測を run_forecast.py が読める形式に変換して保存する
+
+import csv
 import json
-from pathlib import Path
+import datetime
 
-import requests
+INPUT_FILE = "data/real_raw.csv"     # あなたが保存している raw データ
+OUTPUT_FILE = "data/real_weather.json"
 
-API_URL = "https://api.open-meteo.com/v1/forecast"
-PARAMS = {
-    "latitude": 34.6937,
-    "longitude": 135.5023,
-    "hourly": "temperature_2m,precipitation_probability,weathercode",
-    "timezone": "Asia/Tokyo",
-}
+def convert():
+    times = []
+    temps = []
+    rain = []
+    codes = []
 
+    with open(INPUT_FILE, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            times.append(row["Time"])
+            temps.append(float(row["Temperature"]))
+            rain.append(int(row["Precipitation Probability"]))
 
-def fetch_real_weather() -> dict:
-    response = requests.get(API_URL, params=PARAMS, timeout=30)
-    response.raise_for_status()
-    data = response.json()
+            # Weather → code変換
+            w = row["Weather"].lower()
+            if "clear" in w or "sunny" in w:
+                code = 0
+            elif "cloud" in w:
+                code = 3
+            elif "drizzle" in w:
+                code = 51
+            elif "rain" in w:
+                code = 61
+            elif "heavy" in w:
+                code = 80
+            elif "storm" in w or "thunder" in w:
+                code = 95
+            else:
+                code = 3
+            codes.append(code)
 
-    hourly = data.get("hourly", {})
-    times = hourly.get("time", [])[:24]
-    temperatures = hourly.get("temperature_2m", [])[:24]
-    precip_probs = hourly.get("precipitation_probability", [])[:24]
-    weather_codes = hourly.get("weathercode", [])[:24]
-
-    condensed = [
-        {
-            "time": t,
-            "temperature": temp,
-            "precipitation_probability": precip,
-            "weathercode": code,
-        }
-        for t, temp, precip, code in zip(times, temperatures, precip_probs, weather_codes)
-    ]
-
-    return {
-        "source": "open-meteo",
-        "latitude": data.get("latitude"),
-        "longitude": data.get("longitude"),
-        "timezone": data.get("timezone"),
-        "retrieved_at": data.get("generationtime_ms"),
-        "entries": condensed,
+    real = {
+        "time": times,
+        "temp": temps,
+        "rain": rain,
+        "code": codes,
     }
 
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(real, f, ensure_ascii=False, indent=2)
 
-def main() -> None:
-    Path("data").mkdir(exist_ok=True)
-    real_weather = fetch_real_weather()
-    with Path("data/real_weather.json").open("w", encoding="utf-8") as fp:
-        json.dump(real_weather, fp, ensure_ascii=False, indent=2)
-    print("[OK] Saved real Osaka weather to data/real_weather.json")
+    print(f"[OK] Real weather saved to {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
-    main()
+    convert()
