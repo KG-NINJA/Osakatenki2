@@ -1,56 +1,49 @@
 # predict_real_weather.py
-# 実測を run_forecast.py が読める形式に変換して保存する
+# Osaka actual weather fetcher (Open-Meteo API)
 
-import csv
+import requests
 import json
-import datetime
+from datetime import datetime, timedelta, timezone
+import os
 
-INPUT_FILE = "data/real_raw.csv"     # あなたが保存している raw データ
 OUTPUT_FILE = "data/real_weather.json"
 
-def convert():
-    times = []
-    temps = []
-    rain = []
-    codes = []
+# Osaka 座標
+LAT = 34.6937
+LON = 135.5023
 
-    with open(INPUT_FILE, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            times.append(row["Time"])
-            temps.append(float(row["Temperature"]))
-            rain.append(int(row["Precipitation Probability"]))
+def fetch_real_weather():
+    """
+    Open-Meteo の "最近の観測値" を1時間ごとに取得
+    GitHub Actions 上で安定して動きます
+    """
+    url = (
+        "https://api.open-meteo.com/v1/forecast?"
+        f"latitude={LAT}&longitude={LON}"
+        "&hourly=temperature_2m,precipitation_probability,weathercode"
+        "&past_days=1"
+        "&timezone=Asia%2FTokyo"
+    )
 
-            # Weather → code変換
-            w = row["Weather"].lower()
-            if "clear" in w or "sunny" in w:
-                code = 0
-            elif "cloud" in w:
-                code = 3
-            elif "drizzle" in w:
-                code = 51
-            elif "rain" in w:
-                code = 61
-            elif "heavy" in w:
-                code = 80
-            elif "storm" in w or "thunder" in w:
-                code = 95
-            else:
-                code = 3
-            codes.append(code)
+    print("Fetching real weather...")
+    res = requests.get(url)
+    data = res.json()
+
+    hourly = data["hourly"]
 
     real = {
-        "time": times,
-        "temp": temps,
-        "rain": rain,
-        "code": codes,
+        "time": hourly["time"],
+        "temp": hourly["temperature_2m"],
+        "rain": hourly["precipitation_probability"],
+        "code": hourly["weathercode"]
     }
 
+    os.makedirs("data", exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(real, f, ensure_ascii=False, indent=2)
 
-    print(f"[OK] Real weather saved to {OUTPUT_FILE}")
+    print(f"[OK] Saved: {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
-    convert()
+    fetch_real_weather()
