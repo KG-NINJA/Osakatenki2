@@ -3,44 +3,47 @@ name: Weather
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"  # 毎日0時実行（任意）
+    - cron: "0 0 * * *"  # 毎日0時(JST=9時)に実行
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Debug | List repo files
-        run: |
-          pwd
-          ls -R .
+      - name: Debug file list
+        run: ls -R .
 
-      - name: Generate Osaka Forecast
-        run: |
-          python osaka_forecast_engine.py
+      - name: Generate Osaka forecast
+        run: python osaka_forecast_engine.py
 
-      - name: Deploy to GitHub Pages
-        uses: actions/upload-pages-artifact@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v2
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
