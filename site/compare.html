@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>大阪天気：予測 vs 実測</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body { font-family: "Noto Sans JP", sans-serif; padding: 20px; background: #f7fbff; }
+h1 { text-align: center; color: #ff6b6b; }
+table { border-collapse: collapse; width: 100%; max-width: 800px; margin: 10px auto; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+th { background: #ff8787; color: white; }
+tr:nth-child(even) { background: #fff0f0; }
+#chart { width: 95%; max-width: 900px; margin: 20px auto; }
+.score-box {
+  margin: 15px auto; padding: 15px;
+  text-align: center; font-size: 18px;
+  background: white; border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+</style>
+</head>
+<body>
+
+<h1>大阪天気：予測 vs 実測</h1>
+<div class="score-box" id="score"></div>
+
+<canvas id="chart" height="180"></canvas>
+
+<table id="result-table">
+  <tr>
+    <th>時刻</th>
+    <th>予測 気温</th>
+    <th>実測 気温</th>
+    <th>気温誤差</th>
+    <th>予測 降水%</th>
+    <th>実測 降水%</th>
+    <th>降水誤差</th>
+  </tr>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="compare.js"></script>
+
+</body>
+</html>
