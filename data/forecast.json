@@ -1,0 +1,154 @@
+{
+  "generated_at": "2025-11-28T08:49",
+  "model_parameters": {
+    "temp_bias": 0.0,
+    "rain_bias": 0.0,
+    "cloud_to_rain_scale": 1.0
+  },
+  "entries": [
+    {
+      "time": "2025-11-28T17:00",
+      "temperature": 14.7,
+      "weathercode": 51,
+      "precipitation_probability": 56
+    },
+    {
+      "time": "2025-11-28T18:00",
+      "temperature": 14.3,
+      "weathercode": 51,
+      "precipitation_probability": 58
+    },
+    {
+      "time": "2025-11-28T19:00",
+      "temperature": 13.5,
+      "weathercode": 51,
+      "precipitation_probability": 46
+    },
+    {
+      "time": "2025-11-28T20:00",
+      "temperature": 12.9,
+      "weathercode": 2,
+      "precipitation_probability": 42
+    },
+    {
+      "time": "2025-11-28T21:00",
+      "temperature": 12.8,
+      "weathercode": 1,
+      "precipitation_probability": 37
+    },
+    {
+      "time": "2025-11-28T22:00",
+      "temperature": 11.8,
+      "weathercode": 61,
+      "precipitation_probability": 67
+    },
+    {
+      "time": "2025-11-28T23:00",
+      "temperature": 11.1,
+      "weathercode": 51,
+      "precipitation_probability": 51
+    },
+    {
+      "time": "2025-11-29T00:00",
+      "temperature": 10.1,
+      "weathercode": 51,
+      "precipitation_probability": 48
+    },
+    {
+      "time": "2025-11-29T01:00",
+      "temperature": 11.2,
+      "weathercode": 51,
+      "precipitation_probability": 51
+    },
+    {
+      "time": "2025-11-29T02:00",
+      "temperature": 11.4,
+      "weathercode": 51,
+      "precipitation_probability": 55
+    },
+    {
+      "time": "2025-11-29T03:00",
+      "temperature": 11.5,
+      "weathercode": 1,
+      "precipitation_probability": 43
+    },
+    {
+      "time": "2025-11-29T04:00",
+      "temperature": 11.1,
+      "weathercode": 61,
+      "precipitation_probability": 68
+    },
+    {
+      "time": "2025-11-29T05:00",
+      "temperature": 10.6,
+      "weathercode": 51,
+      "precipitation_probability": 58
+    },
+    {
+      "time": "2025-11-29T06:00",
+      "temperature": 10.8,
+      "weathercode": 61,
+      "precipitation_probability": 73
+    },
+    {
+      "time": "2025-11-29T07:00",
+      "temperature": 11.8,
+      "weathercode": 61,
+      "precipitation_probability": 70
+    },
+    {
+      "time": "2025-11-29T08:00",
+      "temperature": 14.0,
+      "weathercode": 51,
+      "precipitation_probability": 49
+    },
+    {
+      "time": "2025-11-29T09:00",
+      "temperature": 13.8,
+      "weathercode": 51,
+      "precipitation_probability": 60
+    },
+    {
+      "time": "2025-11-29T10:00",
+      "temperature": 16.1,
+      "weathercode": 51,
+      "precipitation_probability": 47
+    },
+    {
+      "time": "2025-11-29T11:00",
+      "temperature": 16.6,
+      "weathercode": 1,
+      "precipitation_probability": 38
+    },
+    {
+      "time": "2025-11-29T12:00",
+      "temperature": 16.4,
+      "weathercode": 51,
+      "precipitation_probability": 50
+    },
+    {
+      "time": "2025-11-29T13:00",
+      "temperature": 17.0,
+      "weathercode": 51,
+      "precipitation_probability": 48
+    },
+    {
+      "time": "2025-11-29T14:00",
+      "temperature": 16.4,
+      "weathercode": 61,
+      "precipitation_probability": 67
+    },
+    {
+      "time": "2025-11-29T15:00",
+      "temperature": 17.0,
+      "weathercode": 51,
+      "precipitation_probability": 64
+    },
+    {
+      "time": "2025-11-29T16:00",
+      "temperature": 17.2,
+      "weathercode": 51,
+      "precipitation_probability": 63
+    }
+  ]
+}
