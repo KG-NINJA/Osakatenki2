@@ -1,17 +1,12 @@
 """
 trainer.py
 Self-Learning Osaka Weather AI
--------------------------------------
-Train model parameters based on:
-- real_weather.json (yesterday actual)
-- today_forecast.json (AI prediction)
--------------------------------------
+Safely handles first-run cases / missing data.
 """
 
 import json
 import numpy as np
 import os
-
 
 DATA_REAL = "data/real_weather.json"
 DATA_MODEL = "data/today_forecast.json"
@@ -38,30 +33,34 @@ def main():
     pred = load_json(DATA_MODEL)
 
     if real is None:
-        raise FileNotFoundError("real_weather.json must exist for training")
-
-    # 日次学習は24時間分データが揃っている場合にのみ行う
-    if len(real["temp"]) < 12 or len(pred["temp"]) < 12:  # 初日はデータが少ないためスキップ
-        print("[SKIP] not enough data for training yet")
-        print("Next learning will run when 24 hrs of real weather stored.")
+        print("[SKIP] real_weather.json does not exist yet")
         return
 
+    if pred is None:
+        print("[SKIP] today_forecast.json does not exist yet (run_forecast first)")
+        return
+
+    if "temp" not in real or "temp" not in pred:
+        print("[SKIP] Missing 'temp' key. Data not ready.")
+        return
+
+    if len(real["temp"]) < 12 or len(pred["temp"]) < 12:
+        print("[SKIP] not enough data for training yet")
+        return
+
+    # 誤差ベース学習
     L = min(len(real["temp"]), len(pred["temp"]))
     real_temp = np.array(real["temp"][:L])
     pred_temp = np.array(pred["temp"][:L])
+    correction = float(np.mean(real_temp - pred_temp))
 
-    # 誤差から係数調整
-    diff = real_temp - pred_temp
-    correction = float(np.mean(diff))  # 単純平均補正
-
-    # 既存パラメータをロード
     params = load_json(MODEL_PARAM) or {"temp_bias": 0.0}
-    params["temp_bias"] += correction  # 強化学習（小さな改善を積む）
+    params["temp_bias"] += correction * 0.1  # 学習レートを小さく
 
-    print(f"[UPDATE] temp_bias += {correction:.3f} (new: {params['temp_bias']:.3f})")
-
+    print(f"[UPDATE] temp_bias += {correction:.3f} -> {params['temp_bias']:.3f}")
     save_json(MODEL_PARAM, params)
-    print("[OK] model_param.json updated")
+
+    print("[OK] training complete")
 
 
 if __name__ == "__main__":
