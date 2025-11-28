@@ -1,2 +1,6 @@
 requests
 zoneinfo ; python_version < "3.9"
+numpy
+matplotlib
+requests
+
