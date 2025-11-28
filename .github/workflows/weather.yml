@@ -3,7 +3,7 @@ name: Weather
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"  # 毎日0時(JST=9時)に実行
+    - cron: "0 0 * * *"
 
 permissions:
   contents: read
@@ -30,7 +30,7 @@ jobs:
         run: ls -R .
 
       - name: Generate Osaka forecast
-        run: python osaka_forecast_engine.py
+        run: python run_osaka_forecast.py   # ← ここが最重要！
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
