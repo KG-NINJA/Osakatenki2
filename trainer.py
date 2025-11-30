@@ -1,4 +1,9 @@
-import datetime
+"""
+trainer.py
+Self-Learning Osaka Weather AI
+Safely handles first-run cases / missing data.
+"""
+
 import json
 from pathlib import Path
 from statistics import mean
