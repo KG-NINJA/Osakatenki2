@@ -3,6 +3,7 @@ trainer_improved.py
 Self-Learning Osaka Weather AI - Improved Version (Priority Fixes)
 """
 
+import argparse
 import datetime
 import json
 import logging
@@ -14,6 +15,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 from zoneinfo import ZoneInfo
 
+import models.stacking_model as stacking
 from osaka_forecast_engine import forecast_to_json, synthesize_osaka_forecast
 from predict_real_weather import fetch_real_weather
 from requests import RequestException
@@ -42,6 +44,33 @@ def save_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as fp:
         json.dump(data, fp, ensure_ascii=False, indent=2)
+
+
+def normalize_real_entries(real_data: dict) -> dict:
+    """Ensure real weather payload has an entries list for downstream consumers."""
+    if "entries" not in real_data or not isinstance(real_data.get("entries"), list):
+        times = real_data.get("time") or []
+        temps = real_data.get("temp") or []
+        rains = real_data.get("rain") or []
+        codes = real_data.get("code") or []
+
+        converted = []
+        for idx, ts in enumerate(times):
+            converted.append(
+                {
+                    "time": ts,
+                    "temperature": float(temps[idx]) if idx < len(temps) else 0.0,
+                    "precipitation_probability": float(rains[idx]) if idx < len(rains) else 0.0,
+                    "weathercode": int(codes[idx]) if idx < len(codes) else 0,
+                }
+            )
+
+        real_data["entries"] = converted
+
+    if not isinstance(real_data.get("entries", []), list):
+        real_data["entries"] = []
+
+    return real_data
 
 
 def load_model_params() -> Dict[str, float]:
@@ -231,7 +260,7 @@ def regenerate_forecast(real_data: dict) -> dict:
     real_weather.json のエントリ数に合わせて生成
     """
     entries = real_data.get("entries", [])
-    
+
     if not entries:
         raise ValueError("real_weather.json has no entries to generate forecast from")
     
@@ -274,7 +303,14 @@ def ensure_forecast_alignment_improved(real_data: dict) -> Tuple[dict, dict, dic
     - entries 数がズレている場合 → 再生成
     """
     
+    real_data = normalize_real_entries(real_data)
     real_entries_list = real_data.get("entries", [])
+
+    if not real_entries_list:
+        logger.warning("real_weather.json has no entries; using synthetic fallback")
+        real_data = generate_synthetic_fallback()
+        real_entries_list = real_data.get("entries", [])
+
     real_entries_count = len(real_entries_list)
     
     # CASE 1: forecast.json が存在しない
@@ -340,9 +376,9 @@ def fetch_real_weather_with_fallback() -> dict:
     
     if REAL_WEATHER_PATH.exists():
         try:
-            real_data = load_json(REAL_WEATHER_PATH)
+            real_data = normalize_real_entries(load_json(REAL_WEATHER_PATH))
             entries = real_data.get("entries", [])
-            
+
             # 最小限の検証：エントリ数が妥当か
             if len(entries) >= 12:  # 最低12時間以上
                 logger.info(f"✓ Real weather loaded: {len(entries)} entries")
@@ -359,6 +395,7 @@ def fetch_real_weather_with_fallback() -> dict:
     logger.info("Fetching real weather from API...")
     try:
         real_weather = fetch_real_weather()
+        real_weather = normalize_real_entries(real_weather)
         entries = real_weather.get("entries", [])
         
         if len(entries) < 12:
@@ -369,6 +406,10 @@ def fetch_real_weather_with_fallback() -> dict:
             logger.info(f"✓ Fresh real weather: {len(entries)} entries")
             save_json(REAL_WEATHER_PATH, real_weather)
         
+        if not entries:
+            logger.warning("API returned no entries; using synthetic fallback")
+            return generate_synthetic_fallback()
+
         return real_weather
         
     except RequestException as exc:
@@ -402,21 +443,67 @@ def generate_synthetic_fallback() -> dict:
     logger.warning(
         f"✓ Synthetic fallback generated: {len(synthetic_entries)} entries saved"
     )
-    
+
     return synthetic_real
 
 
-def main() -> None:
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Self-learning Osaka weather trainer")
+    parser.add_argument(
+        "--model",
+        choices=["baseline", "stacking", "hybrid"],
+        default="baseline",
+        help="Modeling strategy for forecast comparison",
+    )
+    parser.add_argument(
+        "--hybrid-weight",
+        type=float,
+        default=0.5,
+        dest="hybrid_weight",
+        help="Weight for baseline in hybrid mode (0-1)",
+    )
+    return parser.parse_args()
+
+
+def main(args: argparse.Namespace | None = None) -> None:
     """メイン処理"""
+    args = args or parse_args()
+
     logger.info("=" * 60)
     logger.info("=== Trainer Start ===")
     logger.info("=" * 60)
-    
+
     # ===== ③ 実測データを取得（fallback付き） =====
     real_data = fetch_real_weather_with_fallback()
-    
+
     # ===== ② forecast.json の整合性確保 =====
-    forecast_data, forecast_entries, real_entries, common_times = ensure_forecast_alignment_improved(real_data)
+    forecast_data, _, _, _ = ensure_forecast_alignment_improved(real_data)
+
+    if args.model == "stacking":
+        logger.info("Using stacking ensemble for forecast adjustment")
+        forecast_data = stacking.predict_stacking(forecast_data, real_data)
+    elif args.model == "hybrid":
+        logger.info(
+            f"Using hybrid ensemble (baseline weight={args.hybrid_weight:.2f}) for forecast adjustment"
+        )
+        forecast_data = stacking.predict_stacking(
+            forecast_data, real_data, hybrid_weight=args.hybrid_weight
+        )
+
+    forecast_entries = {
+        normalize_timestamp(entry["time"]): entry
+        for entry in forecast_data.get("entries", [])
+    }
+    real_entries = {
+        normalize_timestamp(entry["time"]): entry
+        for entry in normalize_real_entries(real_data).get("entries", [])
+    }
+
+    common_times = sorted(set(forecast_entries) & set(real_entries))
+
+    if not common_times:
+        logger.error("No overlapping timestamps between forecast and real weather after normalization")
+        return
     
     # 誤差を計算
     temp_diffs: List[float] = []
