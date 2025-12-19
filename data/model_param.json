@@ -1,5 +1,5 @@
 {
-  "temp_bias": 2.5750000000000006,
-  "rain_bias": -53.75,
-  "cloud_to_rain_scale": 0.20979559832807868
+  "temp_bias": 2.650000000000001,
+  "rain_bias": -54.75,
+  "cloud_to_rain_scale": 0.20322234280384824
 }
