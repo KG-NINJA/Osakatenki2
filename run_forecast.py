@@ -159,6 +159,11 @@ def render_full_page(html_forecast, real, pred_json, mae, mape, errors, growth_p
             error_table += f"<tr><td>{e:.2f}</td></tr>"
 
     growth_img = f"<img src='{growth_path}' width='600'>" if growth_path else "(初日のためデータなし)"
+    metrics_text = (
+        f"MAE: {mae:.3f}　/　MAPE: {mape:.2f}%"
+        if mae is not None and mape is not None
+        else "実測データがないため、今回は誤差を計算していません。"
+    )
 
     html = f"""
 <html lang="ja">
@@ -185,7 +190,7 @@ td,th {{ border:1px solid #ccc; padding:6px; }}
 </table>
 
 <h2>誤差（実測 vs 予測）</h2>
-<p>MAE: {mae:.3f}　/　MAPE: {mape:.2f}%</p>
+<p>{metrics_text}</p>
 <table><tr><th>温度誤差 (°C)</th></tr>{error_table}</table>
 
 <h2>AI 成長グラフ（MAPE履歴）</h2>
