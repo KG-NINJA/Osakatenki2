@@ -2,9 +2,7 @@ name: Self-Learning Osaka Weather AI
 
 on:
   schedule:
-    - cron: "0 0 * * *"     # JST 9:00 → 実測天気取得
-    - cron: "0 1 * * *"     # JST 10:00 → 予報生成＋HTML更新
-    - cron: "0 2 * * *"     # JST 11:00 → 学習
+    - cron: "0 0 * * *"     # JST 9:00 → 観測取得→安全な学習→新予報→公開
   workflow_dispatch:
 
 permissions:
@@ -12,55 +10,56 @@ permissions:
   pages: write
   id-token: write
 
+# 1回のrunに全段階を含めるため、pending runが置換されても中間段階だけ欠落しない。
 concurrency:
   group: osaka-weather-pipeline
   cancel-in-progress: false
 
 jobs:
-  real_weather:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 * * *'
+  pipeline:
+    name: Fetch → Train → Forecast → Publish
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout latest branch state
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
 
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - run: python predict_real_weather.py
+      - name: Fetch completed weather hours
+        run: python predict_real_weather.py
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Train only against the prior issued forecast
+        # 事前予報と完了観測が12時間以上重なる場合だけモデルを更新する。
+        run: python safe_train.py
+
+      - name: Generate the next forecast and site
+        # 学習後に新しいforecast.jsonを保存し、次回runの評価・学習に使う。
+        run: python run_forecast.py
+
+      - name: Commit generated data and model changes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update real weather"
+          commit_message: "Daily Osaka weather pipeline update"
 
-  forecast:
-    runs-on: ubuntu-latest
-    needs: real_weather
-    if: >-
-      always() &&
-      (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 1 * * *') &&
-      (needs.real_weather.result == 'success' || needs.real_weather.result == 'skipped')
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - run: pip install -r requirements.txt
-
-      - run: python run_forecast.py
-
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: site
 
   deploy:
+    name: Deploy GitHub Pages
     runs-on: ubuntu-latest
-    needs: forecast
-    if: needs.forecast.result == 'success'
+    needs: pipeline
     environment:
       name: github-pages
 
@@ -68,29 +67,3 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-
-  train:
-    runs-on: ubuntu-latest
-    needs: real_weather
-    if: >-
-      always() &&
-      (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 2 * * *') &&
-      (needs.real_weather.result == 'success' || needs.real_weather.result == 'skipped')
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - run: pip install -r requirements.txt
-
-      - name: Remove stale training forecast and retrain
-        # trainer.py は forecast.json が無ければ最新の実測時刻に合わせて安全に再生成する。
-        run: |
-          rm -f data/forecast.json
-          python trainer.py
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Self-learn: update model parameters"
