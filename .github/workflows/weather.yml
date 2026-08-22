@@ -12,9 +12,13 @@ permissions:
   pages: write
   id-token: write
 
-jobs:
+concurrency:
+  group: osaka-weather-pipeline
+  cancel-in-progress: false
 
+jobs:
   real_weather:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 * * *'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,11 +34,14 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update real weather"
-          push_options: '--force'
 
   forecast:
     runs-on: ubuntu-latest
     needs: real_weather
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 1 * * *') &&
+      (needs.real_weather.result == 'success' || needs.real_weather.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 
@@ -53,6 +60,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: forecast
+    if: needs.forecast.result == 'success'
     environment:
       name: github-pages
 
@@ -64,6 +72,10 @@ jobs:
   train:
     runs-on: ubuntu-latest
     needs: real_weather
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' || github.event.schedule == '0 2 * * *') &&
+      (needs.real_weather.result == 'success' || needs.real_weather.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 
@@ -73,9 +85,12 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python trainer.py
+      - name: Remove stale training forecast and retrain
+        # trainer.py は forecast.json が無ければ最新の実測時刻に合わせて安全に再生成する。
+        run: |
+          rm -f data/forecast.json
+          python trainer.py
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Self-learn: update model parameters"
-          push_options: '--force'
