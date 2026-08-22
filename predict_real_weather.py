@@ -1,5 +1,5 @@
 # predict_real_weather.py
-# Osaka actual weather fetcher (Open-Meteo API)
+# Osaka completed-weather fetcher (Open-Meteo API)
 
 import json
 import os
@@ -16,27 +16,42 @@ LON = 135.5023
 JST = ZoneInfo("Asia/Tokyo")
 
 
-def as_jst_iso(value: str) -> str:
-    """Open-Meteoのローカル時刻へJSTオフセットを明示する。"""
+def as_jst_datetime(value: str) -> datetime:
+    """Open-Meteoの時刻をJST aware datetimeへ変換する。"""
     parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=JST)
+        return parsed.replace(tzinfo=JST)
+    return parsed.astimezone(JST)
+
+
+def as_jst_iso(value: str) -> str:
+    """Open-Meteoのローカル時刻へJSTオフセットを明示する。"""
+    return as_jst_datetime(value).isoformat(timespec="minutes")
+
+
+def completed_hour_indices(times: list[str], now: datetime | None = None) -> list[int]:
+    """現在の未完了時間と未来予報を学習入力から除外する。"""
+    current = now or datetime.now(JST)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=JST)
     else:
-        parsed = parsed.astimezone(JST)
-    return parsed.isoformat(timespec="minutes")
+        current = current.astimezone(JST)
+    boundary = current.replace(minute=0, second=0, microsecond=0)
+    return [idx for idx, value in enumerate(times) if as_jst_datetime(value) < boundary]
 
 
 def fetch_real_weather():
-    """Open-Meteo の最近の観測値を1時間ごとに取得する。"""
+    """Open-Meteoから完了済みの最近の時間帯だけを取得する。"""
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         f"latitude={LAT}&longitude={LON}"
         "&hourly=temperature_2m,precipitation_probability,weather_code"
         "&past_days=1"
+        "&forecast_days=1"
         "&timezone=Asia%2FTokyo"
     )
 
-    print("Fetching real weather...")
+    print("Fetching completed weather hours...")
     res = requests.get(url, timeout=20)
     res.raise_for_status()
     data = res.json()
@@ -57,18 +72,26 @@ def fetch_real_weather():
     if missing:
         raise RuntimeError(f"Open-Meteo hourly data is missing fields: {missing}")
 
+    lengths = {key: len(hourly[key]) for key in required}
+    if len(set(lengths.values())) != 1:
+        raise RuntimeError(f"Open-Meteo hourly arrays have inconsistent lengths: {lengths}")
+
+    indices = completed_hour_indices(hourly["time"])
+    if not indices:
+        raise RuntimeError("Open-Meteo returned no completed hourly observations")
+
     real = {
-        "time": [as_jst_iso(value) for value in hourly["time"]],
-        "temp": hourly["temperature_2m"],
-        "rain": hourly["precipitation_probability"],
-        "code": hourly["weather_code"],
+        "time": [as_jst_iso(hourly["time"][idx]) for idx in indices],
+        "temp": [hourly["temperature_2m"][idx] for idx in indices],
+        "rain": [hourly["precipitation_probability"][idx] for idx in indices],
+        "code": [hourly["weather_code"][idx] for idx in indices],
     }
 
     os.makedirs("data", exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(real, f, ensure_ascii=False, indent=2)
 
-    print(f"[OK] Saved: {OUTPUT_FILE}")
+    print(f"[OK] Saved {len(indices)} completed hours: {OUTPUT_FILE}")
     return real
 
 
