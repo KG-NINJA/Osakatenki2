@@ -3,6 +3,8 @@
 
 import json
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -11,6 +13,17 @@ OUTPUT_FILE = "data/real_weather.json"
 # Osaka 座標
 LAT = 34.6937
 LON = 135.5023
+JST = ZoneInfo("Asia/Tokyo")
+
+
+def as_jst_iso(value: str) -> str:
+    """Open-Meteoのローカル時刻へJSTオフセットを明示する。"""
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=JST)
+    else:
+        parsed = parsed.astimezone(JST)
+    return parsed.isoformat(timespec="minutes")
 
 
 def fetch_real_weather():
@@ -45,7 +58,7 @@ def fetch_real_weather():
         raise RuntimeError(f"Open-Meteo hourly data is missing fields: {missing}")
 
     real = {
-        "time": hourly["time"],
+        "time": [as_jst_iso(value) for value in hourly["time"]],
         "temp": hourly["temperature_2m"],
         "rain": hourly["precipitation_probability"],
         "code": hourly["weather_code"],
