@@ -46,6 +46,7 @@ def test_open_meteo_uses_current_weather_code_field(monkeypatch, tmp_path):
     assert "weather_code" in called["url"]
     assert "weathercode" not in called["url"]
     assert called["timeout"] == 20
+    assert result["time"] == ["2026-08-22T09:00+09:00"]
     assert result["code"] == [2]
 
 
@@ -67,7 +68,7 @@ def test_trainer_regenerates_when_stale_forecast_file_is_removed(monkeypatch, tm
     real_data = {
         "entries": [
             {
-                "time": "2026-08-22T09:00",
+                "time": "2026-08-22T09:00+09:00",
                 "temperature": 30.0,
                 "precipitation_probability": 10.0,
                 "weathercode": 1,
@@ -80,7 +81,7 @@ def test_trainer_regenerates_when_stale_forecast_file_is_removed(monkeypatch, tm
         return {
             "entries": [
                 {
-                    "time": "2026-08-22T09:00",
+                    "time": "2026-08-22T09:00+09:00",
                     "temperature": 29.0,
                     "precipitation_probability": 20.0,
                 }
