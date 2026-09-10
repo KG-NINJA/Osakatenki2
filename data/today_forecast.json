@@ -1,152 +1,152 @@
 {
-  "generated_at": "2026-09-09T01:54",
+  "generated_at": "2026-09-10T01:51",
   "model_parameters": {
-    "temp_bias": 7.512499999999887,
-    "rain_bias": -289.6287368881119,
+    "temp_bias": 6.917499999999888,
+    "rain_bias": -289.4133522727273,
     "cloud_to_rain_scale": 0.2
   },
   "entries": [
     {
-      "time": "2026-09-09T10:00",
-      "temperature": 34.1,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T11:00",
-      "temperature": 36.1,
+      "time": "2026-09-10T10:00",
+      "temperature": 34.5,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T12:00",
+      "time": "2026-09-10T11:00",
+      "temperature": 35.3,
+      "weathercode": 2,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-10T12:00",
       "temperature": 36.6,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T13:00",
-      "temperature": 35.5,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T14:00",
-      "temperature": 36.6,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T15:00",
-      "temperature": 36.1,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T16:00",
-      "temperature": 37.1,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T17:00",
-      "temperature": 36.7,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T18:00",
-      "temperature": 34.1,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-09T19:00",
-      "temperature": 33.2,
+      "time": "2026-09-10T13:00",
+      "temperature": 35.3,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T20:00",
-      "temperature": 32.5,
+      "time": "2026-09-10T14:00",
+      "temperature": 36.8,
       "weathercode": 3,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T21:00",
-      "temperature": 32.8,
+      "time": "2026-09-10T15:00",
+      "temperature": 35.9,
       "weathercode": 3,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T22:00",
-      "temperature": 31.5,
+      "time": "2026-09-10T16:00",
+      "temperature": 35.7,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-09T23:00",
-      "temperature": 30.9,
+      "time": "2026-09-10T17:00",
+      "temperature": 34.8,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T00:00",
-      "temperature": 30.8,
-      "weathercode": 2,
+      "time": "2026-09-10T18:00",
+      "temperature": 34.4,
+      "weathercode": 3,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T01:00",
+      "time": "2026-09-10T19:00",
+      "temperature": 33.0,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-10T20:00",
       "temperature": 31.8,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T02:00",
-      "temperature": 29.9,
-      "weathercode": 2,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-10T03:00",
-      "temperature": 31.1,
+      "time": "2026-09-10T21:00",
+      "temperature": 32.9,
       "weathercode": 3,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T04:00",
-      "temperature": 31.4,
-      "weathercode": 3,
-      "precipitation_probability": 0
-    },
-    {
-      "time": "2026-09-10T05:00",
+      "time": "2026-09-10T22:00",
       "temperature": 30.9,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T06:00",
-      "temperature": 30.5,
+      "time": "2026-09-10T23:00",
+      "temperature": 30.4,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T07:00",
+      "time": "2026-09-11T00:00",
       "temperature": 31.4,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T01:00",
+      "temperature": 30.3,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T02:00",
+      "temperature": 31.0,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T08:00",
-      "temperature": 34.1,
+      "time": "2026-09-11T03:00",
+      "temperature": 29.6,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T04:00",
+      "temperature": 29.5,
       "weathercode": 2,
       "precipitation_probability": 0
     },
     {
-      "time": "2026-09-10T09:00",
-      "temperature": 33.8,
+      "time": "2026-09-11T05:00",
+      "temperature": 31.2,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T06:00",
+      "temperature": 30.6,
+      "weathercode": 2,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T07:00",
+      "temperature": 30.7,
+      "weathercode": 3,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T08:00",
+      "temperature": 32.6,
+      "weathercode": 2,
+      "precipitation_probability": 0
+    },
+    {
+      "time": "2026-09-11T09:00",
+      "temperature": 34.6,
       "weathercode": 3,
       "precipitation_probability": 0
     }
